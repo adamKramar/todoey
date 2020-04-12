@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryTableViewController: SwipeTableViewController {
     
@@ -19,8 +20,25 @@ class CategoryTableViewController: SwipeTableViewController {
         super.viewDidLoad()
         
         loadCategories()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
-        tableView.rowHeight = 80.0
+        guard let navigationBar = navigationController?.navigationBar else {fatalError("Navigation controller does not exist.")}
+        
+        if #available(iOS 13.0, *) {
+            if let color = UIColor(hexString: "#1d9bf6") {
+                let contrastColor = ContrastColorOf(color, returnFlat: true)
+                let navBarAppearance = UINavigationBarAppearance()
+                navBarAppearance.configureWithOpaqueBackground()
+                navBarAppearance.titleTextAttributes = [.foregroundColor: contrastColor]
+                navBarAppearance.largeTitleTextAttributes = [.foregroundColor: contrastColor]
+                navBarAppearance.backgroundColor = color
+                navigationBar.standardAppearance = navBarAppearance
+                navigationBar.scrollEdgeAppearance = navBarAppearance
+            }
+        }
     }
     
     //MARK: - Add New Category
@@ -31,6 +49,7 @@ class CategoryTableViewController: SwipeTableViewController {
             let newCategory = Category()
             if let categoryName = textField.text {
                 newCategory.name = categoryName
+                newCategory.color = UIColor.randomFlat().hexValue()
                 self.saveCategory(newCategory)
             }
         }
@@ -55,6 +74,10 @@ class CategoryTableViewController: SwipeTableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No categories added yet"
+        if let color = UIColor(hexString: categoryArray?[indexPath.row].color ?? "#1d9bf6") {
+            cell.backgroundColor = color
+            cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+        }
         return cell
     }
     

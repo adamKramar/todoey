@@ -8,8 +8,11 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class ToDoListViewController: SwipeTableViewController {
+    
+    @IBOutlet weak var searchBar: UISearchBar!
     
     let realm = try! Realm()
     
@@ -22,8 +25,29 @@ class ToDoListViewController: SwipeTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
-        tableView.rowHeight = 80.0
+        guard let navigationBar = navigationController?.navigationBar else {fatalError("Navigation controller does not exist.")}
+        
+        if let color =  UIColor(hexString: selectedCategory?.color ?? "#1d9bf6") {
+            title = selectedCategory!.name
+            if #available(iOS 13.0, *) {
+                let contrastColor = ContrastColorOf(color, returnFlat: true)
+                let navBarAppearance = UINavigationBarAppearance()
+                navBarAppearance.configureWithOpaqueBackground()
+                navBarAppearance.titleTextAttributes = [.foregroundColor: contrastColor]
+                navBarAppearance.largeTitleTextAttributes = [.foregroundColor: contrastColor]
+                navBarAppearance.backgroundColor = color
+                searchBar.barTintColor = color
+                searchBar.backgroundColor = .white
+                navigationBar.standardAppearance = navBarAppearance
+                navigationBar.scrollEdgeAppearance = navBarAppearance
+                navigationBar.tintColor = contrastColor
+            }
+        }
     }
     
     //MARK: - Model Manipulation Methods
@@ -88,6 +112,13 @@ class ToDoListViewController: SwipeTableViewController {
         if let item = items?[indexPath.row] {
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ? .checkmark : .none
+            
+            if let color = UIColor(hexString: selectedCategory?.color ?? "#1d9bf6")?
+                .darken(byPercentage: CGFloat(indexPath.row)/CGFloat(items!.count)) {
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
+            
         } else {
             cell.textLabel?.text = "No items added"
         }
